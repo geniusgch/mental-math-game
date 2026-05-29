@@ -72,6 +72,8 @@ const DIGITS: Record<string, number> = {
   期: 7,
   起: 7,
   其: 7,
+  切: 7,
+  接: 7,
   八: 8,
   把: 8,
   吧: 8,

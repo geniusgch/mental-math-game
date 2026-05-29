@@ -113,6 +113,8 @@ describe("spoken number parsing", () => {
     ["期", 7],
     ["起", 7],
     ["其", 7],
+    ["切", 7],
+    ["接", 7],
     ["把", 8],
     ["吧", 8],
     ["巴", 8],
@@ -144,7 +146,9 @@ describe("expected answer matching", () => {
     [18, "十八"],
     [104, "一百领四"],
     [120, "一百二"],
-    [36, "三十六"]
+    [36, "三十六"],
+    [7, "切"],
+    [7, "接"]
   ])("accepts %s when transcript is %s", (expected, transcript) => {
     expect(matchesExpectedAnswer(transcript, expected)).toBe(true);
   });
