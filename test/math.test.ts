@@ -148,7 +148,14 @@ describe("expected answer matching", () => {
     [120, "一百二"],
     [36, "三十六"],
     [7, "切"],
-    [7, "接"]
+    [7, "接"],
+    [7, "气"],
+    [7, "齐"],
+    [7, "器"],
+    [7, "鸡"],
+    [17, "要气"],
+    [27, "二气"],
+    [48, "是把"]
   ])("accepts %s when transcript is %s", (expected, transcript) => {
     expect(matchesExpectedAnswer(transcript, expected)).toBe(true);
   });

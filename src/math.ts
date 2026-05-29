@@ -85,6 +85,72 @@ const DIGITS: Record<string, number> = {
 };
 
 const CHINESE_NUMBER_CHARS = Object.keys(DIGITS).join("");
+const DIGIT_PINYIN_VARIANTS: Record<string, string[]> = {
+  "0": ["ling", "lin"],
+  "1": ["yi", "yao"],
+  "2": ["er", "liang"],
+  "3": ["san"],
+  "4": ["si", "shi"],
+  "5": ["wu"],
+  "6": ["liu"],
+  "7": ["qi", "ji", "xi", "qie", "jie"],
+  "8": ["ba"],
+  "9": ["jiu", "ji"]
+};
+
+const SPOKEN_CHAR_PINYIN: Record<string, string> = {
+  零: "ling",
+  〇: "ling",
+  令: "ling",
+  领: "ling",
+  林: "lin",
+  一: "yi",
+  幺: "yao",
+  要: "yao",
+  腰: "yao",
+  二: "er",
+  儿: "er",
+  耳: "er",
+  两: "liang",
+  三: "san",
+  伞: "san",
+  散: "san",
+  四: "si",
+  是: "shi",
+  市: "shi",
+  事: "shi",
+  试: "shi",
+  五: "wu",
+  我: "wo",
+  无: "wu",
+  午: "wu",
+  六: "liu",
+  溜: "liu",
+  留: "liu",
+  七: "qi",
+  期: "qi",
+  起: "qi",
+  其: "qi",
+  气: "qi",
+  齐: "qi",
+  器: "qi",
+  骑: "qi",
+  棋: "qi",
+  妻: "qi",
+  切: "qie",
+  接: "jie",
+  鸡: "ji",
+  机: "ji",
+  级: "ji",
+  八: "ba",
+  把: "ba",
+  吧: "ba",
+  巴: "ba",
+  九: "jiu",
+  就: "jiu",
+  久: "jiu",
+  酒: "jiu"
+};
 
 export function generateQuestion(levelId: LevelId): Question {
   const catalog = getQuestionCatalog(levelId);
@@ -160,6 +226,8 @@ export function matchesExpectedAnswer(spoken: string, expectedAnswer: number): b
     if (candidate && normalized.includes(candidate)) return true;
   }
 
+  if (matchesExpectedAnswerPinyin(spoken, expectedAnswer)) return true;
+
   return false;
 }
 
@@ -181,6 +249,52 @@ function toDigitSpeech(value: number): string {
       return char;
     })
     .join("");
+}
+
+function matchesExpectedAnswerPinyin(spoken: string, expectedAnswer: number): boolean {
+  if (expectedAnswer < 0) return false;
+
+  const transcriptPinyin = normalizeSpokenText(spoken)
+    .split("")
+    .map((char) => {
+      if (/\d/.test(char)) return DIGIT_PINYIN_VARIANTS[char] ?? [char];
+      return SPOKEN_CHAR_PINYIN[char] ? [SPOKEN_CHAR_PINYIN[char]] : [];
+    })
+    .filter((values) => values.length > 0);
+
+  if (transcriptPinyin.length === 0) return false;
+
+  const transcriptCandidates = combinePinyinParts(transcriptPinyin);
+  const expectedCandidates = makeExpectedPinyinCandidates(expectedAnswer);
+  return [...transcriptCandidates].some((candidate) => expectedCandidates.has(candidate));
+}
+
+function makeExpectedPinyinCandidates(answer: number): Set<string> {
+  const candidates = new Set<string>();
+  candidates.add(toChineseInteger(answer).replace(/[零〇一二三四五六七八九十百千万]/g, (char) => {
+    return SPOKEN_CHAR_PINYIN[char] ?? char;
+  }));
+
+  const digitParts = String(answer).split("").map((digit) => DIGIT_PINYIN_VARIANTS[digit] ?? [digit]);
+  for (const candidate of combinePinyinParts(digitParts)) {
+    candidates.add(candidate);
+  }
+
+  return candidates;
+}
+
+function combinePinyinParts(parts: string[][]): Set<string> {
+  let results = new Set([""]);
+  for (const part of parts) {
+    const next = new Set<string>();
+    for (const prefix of results) {
+      for (const value of part) {
+        next.add(`${prefix}${value}`);
+      }
+    }
+    results = next;
+  }
+  return results;
 }
 
 function toChineseInteger(value: number): string {
