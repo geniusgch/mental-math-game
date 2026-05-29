@@ -1,4 +1,5 @@
 import "./style.css";
+import { canUseCloudSpeech, startCloudSpeechRecognition, type CloudSpeechSession } from "./cloudSpeech";
 import {
   LEVELS,
   formatRecognizedAnswer,
@@ -97,6 +98,7 @@ const app = document.querySelector<HTMLDivElement>("#app");
 const SpeechRecognitionImpl = getSpeechRecognition();
 
 let recognition: SpeechRecognitionLike | null = null;
+let cloudSpeechSession: CloudSpeechSession | null = null;
 let timerId = 0;
 let countdownId = 0;
 let speechRetryId = 0;
@@ -608,6 +610,43 @@ function startListening(): void {
   stopListening();
   acceptingSpeechResult = true;
 
+  if (canUseCloudSpeech()) {
+    startCloudListening();
+    return;
+  }
+
+  startBrowserListening();
+}
+
+function startCloudListening(): void {
+  cloudSpeechSession = startCloudSpeechRecognition({
+    durationMs: 1_900,
+    onResult: (transcript) => {
+      cloudSpeechSession = null;
+      acceptingSpeechResult = false;
+      handleTranscript(transcript);
+    },
+    onError: (error) => {
+      cloudSpeechSession = null;
+      if (error.message === "tencent_asr_not_configured" && SpeechRecognitionImpl) {
+        startBrowserListening();
+        return;
+      }
+      acceptingSpeechResult = false;
+      state.voiceStatus = SpeechRecognitionImpl ? "腾讯云识别失败，改用浏览器" : "腾讯云识别失败，继续听";
+      render();
+      if (SpeechRecognitionImpl) {
+        startBrowserListening();
+        return;
+      }
+      scheduleSpeechRestart();
+    }
+  });
+  state.voiceStatus = "腾讯云正在听";
+  render();
+}
+
+function startBrowserListening(): void {
   if (!SpeechRecognitionImpl) {
     acceptingSpeechResult = false;
     state.voiceStatus = "当前浏览器不支持语音识别";
@@ -653,6 +692,8 @@ function startListening(): void {
 
 function stopListening(): void {
   acceptingSpeechResult = false;
+  cloudSpeechSession?.stop();
+  cloudSpeechSession = null;
   if (!recognition) return;
   const current = recognition;
   recognition = null;
