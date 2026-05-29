@@ -3,8 +3,9 @@ import {
   LEVELS,
   generateQuestion,
   generateUniqueQuestion,
-  getWeightedQuestionPool,
   generateWeightedQuestion,
+  getWeightedQuestionPool,
+  matchesExpectedAnswer,
   parseSpokenNumber
 } from "../src/math";
 
@@ -129,5 +130,30 @@ describe("spoken number parsing", () => {
 
   it("returns null when no number can be understood", () => {
     expect(parseSpokenNumber("再说一遍")).toBeNull();
+  });
+});
+
+describe("expected answer matching", () => {
+  it.each([
+    [8, "把"],
+    [4, "是"],
+    [5, "我"],
+    [9, "就"],
+    [18, "要八"],
+    [18, "一八"],
+    [18, "十八"],
+    [104, "一百领四"],
+    [120, "一百二"],
+    [36, "三十六"]
+  ])("accepts %s when transcript is %s", (expected, transcript) => {
+    expect(matchesExpectedAnswer(transcript, expected)).toBe(true);
+  });
+
+  it.each([
+    [8, "是"],
+    [18, "一九"],
+    [104, "一百领五"]
+  ])("rejects %s when transcript is %s", (expected, transcript) => {
+    expect(matchesExpectedAnswer(transcript, expected)).toBe(false);
   });
 });

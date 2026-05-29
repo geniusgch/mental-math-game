@@ -143,6 +143,91 @@ export function formatRecognizedAnswer(spoken: string): string {
   return String(parsed);
 }
 
+export function matchesExpectedAnswer(spoken: string, expectedAnswer: number): boolean {
+  const parsed = parseSpokenNumber(spoken);
+  if (parsed === expectedAnswer) return true;
+
+  const normalized = normalizeSpokenText(spoken);
+  const candidates = new Set<string>([
+    String(expectedAnswer),
+    toChineseInteger(expectedAnswer),
+    toDigitSpeech(expectedAnswer)
+  ]);
+
+  for (const candidate of candidates) {
+    if (candidate && normalized.includes(candidate)) return true;
+  }
+
+  return false;
+}
+
+function normalizeSpokenText(spoken: string): string {
+  return spoken
+    .trim()
+    .replace(/\s+/g, "")
+    .replace(/[０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+    .replace(/答案是|结果是|等于是|等於是/g, "")
+    .replace(/答案|结果|等于|等於|。|！|!|，|,|\./g, "")
+    .replace(new RegExp(`[${CHINESE_NUMBER_CHARS}]`, "g"), (char) => String(DIGITS[char]));
+}
+
+function toDigitSpeech(value: number): string {
+  return String(value)
+    .split("")
+    .map((char) => {
+      if (char === "-") return "负";
+      return char;
+    })
+    .join("");
+}
+
+function toChineseInteger(value: number): string {
+  if (value === 0) return "零";
+  if (value < 0) return `负${toChineseInteger(Math.abs(value))}`;
+
+  const units = ["", "十", "百", "千"];
+  const sections: string[] = [];
+  let rest = value;
+  let sectionIndex = 0;
+
+  while (rest > 0) {
+    const section = rest % 10000;
+    if (section > 0) {
+      sections.unshift(`${sectionToChinese(section)}${sectionIndex === 0 ? "" : "万"}`);
+    }
+    rest = Math.floor(rest / 10000);
+    sectionIndex += 1;
+  }
+
+  return sections.join("零").replace(/^一十/, "十");
+
+  function sectionToChinese(section: number): string {
+    let result = "";
+    let needsZero = false;
+
+    for (let i = 3; i >= 0; i -= 1) {
+      const divisor = 10 ** i;
+      const digit = Math.floor(section / divisor) % 10;
+      if (digit === 0) {
+        if (result) needsZero = true;
+        continue;
+      }
+
+      if (needsZero) {
+        result += "零";
+        needsZero = false;
+      }
+      result += `${digitToChinese(digit)}${units[i]}`;
+    }
+
+    return result.replace(/^一十/, "十");
+  }
+}
+
+function digitToChinese(digit: number): string {
+  return ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"][digit];
+}
+
 function parseChineseInteger(input: string): number | null {
   if ([...input].every((char) => char in DIGITS)) {
     return Number([...input].map((char) => DIGITS[char]).join(""));

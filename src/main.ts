@@ -5,6 +5,7 @@ import {
   generateQuestion,
   generateUniqueQuestion,
   generateWeightedQuestion,
+  matchesExpectedAnswer,
   parseSpokenNumber,
   type LevelId,
   type Question
@@ -522,10 +523,10 @@ function handleTranscript(transcript: string): void {
     return;
   }
 
-  if (answer === question.answer) {
+  if (matchesExpectedAnswer(transcript, question.answer)) {
     run.correct += 1;
     state.feedback = "ok";
-    state.voiceStatus = `听到 ${answer}`;
+    state.voiceStatus = `听到 ${answer ?? formatRecognizedAnswer(transcript)}`;
   } else {
     state.feedback = "bad";
     state.voiceStatus = `听到 ${answer}，答案 ${question.answer}`;
