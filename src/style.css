@@ -223,6 +223,7 @@ button:disabled {
 }
 
 .game {
+  position: relative;
   flex-direction: column;
   justify-content: center;
 }
@@ -276,6 +277,34 @@ button:disabled {
   font-size: clamp(9px, 1.9vh, 13px);
   font-weight: 800;
   line-height: 1;
+}
+
+.time-dots {
+  --dot-size: clamp(4px, 1.15vh, 8px);
+  --dot-gap: clamp(2px, 0.55vh, 4px);
+  position: absolute;
+  top: 50%;
+  right: clamp(10px, 2.3vw, 24px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dot-gap);
+  max-height: calc(var(--app-height) - 86px);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.time-dot {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border: 1px solid rgba(248, 250, 252, 0.24);
+  border-radius: 2px;
+  background: rgba(248, 250, 252, 0.08);
+}
+
+.time-dot.active {
+  border-color: rgba(248, 250, 252, 0.9);
+  background: #f8fafc;
 }
 
 .problem-wrap {

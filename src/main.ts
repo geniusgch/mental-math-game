@@ -259,9 +259,10 @@ function renderGame(): string {
   const remaining = run.endsAt ? Math.max(0, Math.ceil((run.endsAt - Date.now()) / 1000)) : null;
   const questionRemaining = run.questionEndsAt ? Math.max(0, Math.ceil((run.questionEndsAt - Date.now()) / 1000)) : null;
   const modeLabel = run.mode === "challenge" ? getLevelName(run.levelId as LevelId) : "街机";
-  const timeLabel =
-    run.mode === "challenge" ? `${questionRemaining ?? 0}s · ${run.correct}/${run.total}` : `${remaining}s · ${run.correct} 对`;
-  const progressLabel = run.mode === "challenge" ? `${run.index}/${run.total}` : `${remaining ?? 0}s`;
+  const scoreLabel = run.mode === "challenge" ? `${run.correct}/${run.total}` : `${run.correct} 对`;
+  const progressLabel = run.mode === "challenge" ? `${run.index}/${run.total}` : `${run.correct}`;
+  const timeTotal = run.mode === "challenge" ? getDifficulty(run.difficultyId).timeLimitSeconds : arcadeDurationMs / 1000;
+  const timeRemaining = run.mode === "challenge" ? questionRemaining ?? 0 : remaining ?? 0;
   const progressPercent =
     run.mode === "challenge"
       ? Math.min(100, Math.max(0, (run.index / run.total) * 100))
@@ -274,8 +275,9 @@ function renderGame(): string {
         <div class="progress-ring" aria-label="进度 ${progressLabel}" style="--progress: ${progressPercent}%">
           <span class="progress-label">${progressLabel}</span>
         </div>
-        <span class="hud-score">${timeLabel}</span>
+        <span class="hud-score">${scoreLabel}</span>
       </div>
+      ${renderTimeDots(timeTotal, timeRemaining)}
       <div class="problem-wrap">
         <div class="problem">${run.question.expression}</div>
       </div>
@@ -301,6 +303,20 @@ function renderGame(): string {
         </button>
       </div>
     </section>
+  `;
+}
+
+function renderTimeDots(totalSeconds: number, remainingSeconds: number): string {
+  const total = Math.max(0, Math.ceil(totalSeconds));
+  const remaining = Math.max(0, Math.ceil(remainingSeconds));
+
+  return `
+    <div class="time-dots" aria-label="剩余时间">
+      ${Array.from({ length: total }, (_, index) => {
+        const active = index < remaining;
+        return `<span class="time-dot ${active ? "active" : ""}" aria-hidden="true"></span>`;
+      }).join("")}
+    </div>
   `;
 }
 
