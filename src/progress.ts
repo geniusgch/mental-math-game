@@ -103,6 +103,11 @@ export function getBestAccuracy(progress: AppProgress, levelId: LevelId, difficu
   return progress.bestAccuracyByLevelDifficulty[levelDifficultyKey(levelId, difficultyId)] ?? 0;
 }
 
+export function getHighestUnlockedLevel(progress: AppProgress): LevelId {
+  const index = Math.min(Math.max(progress.unlockedLevelIndex, 0), LEVELS.length - 1);
+  return LEVELS[index].id;
+}
+
 function levelDifficultyKey(levelId: LevelId, difficultyId: DifficultyId): string {
   return `${levelId}:${difficultyId}`;
 }

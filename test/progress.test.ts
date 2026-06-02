@@ -3,6 +3,7 @@ import {
   createDefaultProgress,
   finishArcadeRun,
   finishChallengeRun,
+  getHighestUnlockedLevel,
   isDifficultyUnlocked,
   recordMissedQuestion
 } from "../src/progress";
@@ -60,5 +61,10 @@ describe("challenge progress", () => {
 
     expect(updated.arcadeHighScore).toBe(17);
     expect(updated.unlockedLevelIndex).toBe(0);
+  });
+
+  it("returns the highest unlocked level for default selection", () => {
+    expect(getHighestUnlockedLevel({ ...createDefaultProgress(), unlockedLevelIndex: 3 })).toBe("doubleSubtract");
+    expect(getHighestUnlockedLevel({ ...createDefaultProgress(), unlockedLevelIndex: 99 })).toBe("singleDivisorDivide");
   });
 });

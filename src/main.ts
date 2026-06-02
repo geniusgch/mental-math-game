@@ -16,6 +16,7 @@ import {
   finishArcadeRun,
   finishChallengeRun,
   getBestAccuracy,
+  getHighestUnlockedLevel,
   isDifficultyUnlocked,
   loadProgress,
   recordMissedQuestion,
@@ -103,12 +104,13 @@ let timerId = 0;
 let countdownId = 0;
 let speechRetryId = 0;
 let acceptingSpeechResult = false;
+const initialProgress = loadProgressSafe();
 
 const state: AppState = {
   screen: "home",
-  progress: loadProgressSafe(),
+  progress: initialProgress,
   selectedMode: "challenge",
-  selectedLevel: "singleAdd",
+  selectedLevel: getHighestUnlockedLevel(initialProgress),
   selectedDifficulty: "easy",
   countdown: 3,
   run: null,
