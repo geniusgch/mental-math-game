@@ -514,8 +514,8 @@ function nextQuestion(): void {
   run.total = run.mode === "challenge" ? challengeTotal : run.index;
   run.question =
     run.mode === "challenge"
-      ? generateWeightedQuestion(run.levelId as LevelId, state.progress.missedWeights, run.seenQuestionKeys)
-      : generateUniqueArcadeQuestion(run.seenQuestionKeys);
+      ? generateWeightedQuestion(run.levelId as LevelId, state.progress.missedWeights, run.seenQuestionKeys, run.difficultyId)
+      : generateUniqueArcadeQuestion(run.seenQuestionKeys, run.difficultyId);
   run.seenQuestionKeys.add(run.question.expressionKey);
   run.questionEndsAt = run.mode === "challenge" ? Date.now() + getDifficulty(run.difficultyId).timeLimitSeconds * 1000 : null;
   run.feedbackLocked = false;
@@ -563,16 +563,16 @@ function handleTranscript(transcript: string): void {
   window.setTimeout(nextQuestion, feedbackDelayMs);
 }
 
-function generateUniqueArcadeQuestion(seenQuestionKeys: ReadonlySet<string>): Question {
+function generateUniqueArcadeQuestion(seenQuestionKeys: ReadonlySet<string>, difficultyId: DifficultyId): Question {
   const startIndex = Math.floor(Math.random() * LEVELS.length);
 
   for (let offset = 0; offset < LEVELS.length; offset += 1) {
     const level = LEVELS[(startIndex + offset) % LEVELS.length];
-    const question = generateUniqueQuestion(level.id, seenQuestionKeys);
+    const question = generateUniqueQuestion(level.id, seenQuestionKeys, difficultyId);
     if (!seenQuestionKeys.has(question.expressionKey)) return question;
   }
 
-  return generateQuestion(randomLevel());
+  return generateQuestion(randomLevel(), difficultyId);
 }
 
 function handleQuestionTimeout(): void {

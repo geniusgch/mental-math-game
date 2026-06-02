@@ -77,6 +77,45 @@ describe("question generation", () => {
     expect(generateUniqueQuestion("singleAdd", seen).expressionKey).toBe("singleAdd:3+4");
     expect(generateWeightedQuestion("singleAdd", { "singleAdd:3+4": 5 }, seen).expressionKey).toBe("singleAdd:3+4");
   });
+
+  it("allows easy difficulty to include hard-looking questions", () => {
+    const easyAddPool = getWeightedQuestionPool("singleAdd", {}, "easy").map((item) => item.question);
+    const easyMultiplyPool = getWeightedQuestionPool("singleMultiply", {}, "easy").map((item) => item.question);
+
+    expect(easyAddPool.some((question) => question.answer > 10)).toBe(true);
+    expect(easyMultiplyPool.some((question) => question.left >= 6 && question.right >= 6)).toBe(true);
+  });
+
+  it("removes simple questions from hard difficulty pools", () => {
+    for (let i = 0; i < 100; i += 1) {
+      const singleAdd = generateQuestion("singleAdd", "hard");
+      const doubleAdd = generateQuestion("doubleAdd", "hard");
+      const singleSubtract = generateQuestion("singleSubtract", "hard");
+      const singleMultiply = generateQuestion("singleMultiply", "hard");
+
+      expect(singleAdd.answer).toBeGreaterThan(10);
+      expect(doubleAdd.answer).toBeGreaterThanOrEqual(100);
+      expect(singleSubtract.left).toBeGreaterThanOrEqual(6);
+      expect(singleMultiply.left + singleMultiply.right).toBeGreaterThanOrEqual(12);
+    }
+  });
+
+  it("uses carry and borrow combinations in hard difficulty pools", () => {
+    const hardAddPool = getWeightedQuestionPool("singleAdd", {}, "hard").map((item) => item.question);
+    const hardSubtractPool = getWeightedQuestionPool("doubleSubtract", {}, "hard").map((item) => item.question);
+
+    expect(hardAddPool.every((question) => question.answer > 10)).toBe(true);
+    expect(hardSubtractPool.some((question) => question.right % 10 > question.left % 10)).toBe(true);
+  });
+
+  it("scales multiplication and division by difficulty", () => {
+    for (let i = 0; i < 100; i += 1) {
+      const hardDivision = generateQuestion("singleDivisorDivide", "hard");
+
+      expect(hardDivision.answer).toBeGreaterThanOrEqual(6);
+      expect(hardDivision.right).toBeGreaterThanOrEqual(2);
+    }
+  });
 });
 
 describe("spoken number parsing", () => {

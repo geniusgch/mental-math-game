@@ -1,3 +1,5 @@
+import type { DifficultyId } from "./difficulty";
+
 export type LevelId =
   | "singleAdd"
   | "doubleAdd"
@@ -152,14 +154,18 @@ const SPOKEN_CHAR_PINYIN: Record<string, string> = {
   酒: "jiu"
 };
 
-export function generateQuestion(levelId: LevelId): Question {
-  const catalog = getQuestionCatalog(levelId);
+export function generateQuestion(levelId: LevelId, difficultyId: DifficultyId = "easy"): Question {
+  const catalog = getQuestionCatalog(levelId, difficultyId);
   return catalog[randomInt(0, catalog.length - 1)];
 }
 
-export function getWeightedQuestionPool(levelId: LevelId, missedWeights: MissedWeights): WeightedQuestion[] {
+export function getWeightedQuestionPool(
+  levelId: LevelId,
+  missedWeights: MissedWeights,
+  difficultyId: DifficultyId = "easy"
+): WeightedQuestion[] {
   const pool: WeightedQuestion[] = [];
-  for (const question of getQuestionCatalog(levelId)) {
+  for (const question of getQuestionCatalog(levelId, difficultyId)) {
     const repeats = 1 + (missedWeights[question.expressionKey] ?? 0) * 2;
     for (let i = 0; i < repeats; i += 1) {
       pool.push({ expressionKey: question.expressionKey, question });
@@ -172,18 +178,25 @@ export function getWeightedQuestionPool(levelId: LevelId, missedWeights: MissedW
 export function generateWeightedQuestion(
   levelId: LevelId,
   missedWeights: MissedWeights,
-  excludedExpressionKeys: ReadonlySet<string> = new Set()
+  excludedExpressionKeys: ReadonlySet<string> = new Set(),
+  difficultyId: DifficultyId = "easy"
 ): Question {
-  const availablePool = getWeightedQuestionPool(levelId, missedWeights).filter(
+  const fullPool = getWeightedQuestionPool(levelId, missedWeights, difficultyId);
+  const availablePool = fullPool.filter(
     (item) => !excludedExpressionKeys.has(item.expressionKey)
   );
-  const pool = availablePool.length > 0 ? availablePool : getWeightedQuestionPool(levelId, missedWeights);
+  const pool = availablePool.length > 0 ? availablePool : fullPool;
   return pool[randomInt(0, pool.length - 1)].question;
 }
 
-export function generateUniqueQuestion(levelId: LevelId, excludedExpressionKeys: ReadonlySet<string>): Question {
-  const available = getQuestionCatalog(levelId).filter((question) => !excludedExpressionKeys.has(question.expressionKey));
-  const pool = available.length > 0 ? available : getQuestionCatalog(levelId);
+export function generateUniqueQuestion(
+  levelId: LevelId,
+  excludedExpressionKeys: ReadonlySet<string>,
+  difficultyId: DifficultyId = "easy"
+): Question {
+  const catalog = getQuestionCatalog(levelId, difficultyId);
+  const available = catalog.filter((question) => !excludedExpressionKeys.has(question.expressionKey));
+  const pool = available.length > 0 ? available : catalog;
   return pool[randomInt(0, pool.length - 1)];
 }
 
@@ -407,7 +420,17 @@ function findChineseNumber(input: string): string | null {
   return null;
 }
 
-function getQuestionCatalog(levelId: LevelId): Question[] {
+function getQuestionCatalog(levelId: LevelId, difficultyId: DifficultyId): Question[] {
+  const fullCatalog = getFullQuestionCatalog(levelId);
+  if (difficultyId === "easy") return fullCatalog;
+
+  const filtered = fullCatalog.filter((question) => {
+    return difficultyId === "medium" ? isMediumOrHardQuestion(question) : isHardQuestion(question);
+  });
+  return filtered.length > 0 ? filtered : fullCatalog;
+}
+
+function getFullQuestionCatalog(levelId: LevelId): Question[] {
   switch (levelId) {
     case "singleAdd":
       return makeBinaryCatalog(levelId, 1, 9, 1, 9, "+");
@@ -422,6 +445,44 @@ function getQuestionCatalog(levelId: LevelId): Question[] {
     case "singleDivisorDivide":
       return makeDivisionCatalog();
   }
+}
+
+function isMediumOrHardQuestion(question: Question): boolean {
+  switch (question.levelId) {
+    case "singleAdd":
+      return question.answer >= 8;
+    case "doubleAdd":
+      return question.answer >= 70;
+    case "singleSubtract":
+      return question.left >= 5;
+    case "doubleSubtract":
+      return question.left >= 50 || hasBorrow(question);
+    case "singleMultiply":
+      return question.left + question.right >= 9;
+    case "singleDivisorDivide":
+      return question.right >= 2 && question.answer >= 4;
+  }
+}
+
+function isHardQuestion(question: Question): boolean {
+  switch (question.levelId) {
+    case "singleAdd":
+      return question.answer > 10;
+    case "doubleAdd":
+      return question.answer >= 100;
+    case "singleSubtract":
+      return question.left >= 6;
+    case "doubleSubtract":
+      return question.left >= 50 && hasBorrow(question);
+    case "singleMultiply":
+      return question.left + question.right >= 12;
+    case "singleDivisorDivide":
+      return question.right >= 2 && question.answer >= 6;
+  }
+}
+
+function hasBorrow(question: Question): boolean {
+  return question.operator === "-" && question.right % 10 > question.left % 10;
 }
 
 function makeBinaryCatalog(
