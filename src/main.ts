@@ -130,6 +130,7 @@ function render(): void {
 
   app.innerHTML = `
     <main class="app">
+      ${renderMythicScene()}
       ${renderScreen()}
       <aside class="rotate">
         <div>
@@ -141,6 +142,74 @@ function render(): void {
   `;
 
   bindEvents();
+}
+
+function renderMythicScene(): string {
+  return `
+    <div class="mythic-scene" aria-hidden="true">
+      <span class="star star-a"></span>
+      <span class="star star-b"></span>
+      <span class="star star-c"></span>
+      <span class="cloud cloud-a"></span>
+      <span class="cloud cloud-b"></span>
+      <div class="mountains"></div>
+      ${renderMascot("fox")}
+      ${renderMascot("deer")}
+      ${renderMascot("bird")}
+    </div>
+  `;
+}
+
+function renderMascot(kind: "fox" | "deer" | "bird"): string {
+  if (kind === "fox") {
+    return `
+      <svg class="mascot mascot-fox" viewBox="0 0 120 120" role="img" aria-label="Q版九尾狐">
+        <g class="tails">
+          <path d="M38 72C12 67 9 44 25 34c13-8 24 6 15 19"></path>
+          <path d="M47 61C24 46 29 24 45 20c17-4 24 17 10 27"></path>
+          <path d="M61 58C52 31 73 16 87 27c13 10 4 29-13 29"></path>
+          <path d="M72 66c23-14 43 2 36 19-6 15-28 12-31-6"></path>
+        </g>
+        <path class="body" d="M33 73c0-23 16-42 37-42s37 19 37 42c0 21-15 35-37 35S33 94 33 73Z"></path>
+        <path class="ear left" d="M43 39 33 17l25 10Z"></path>
+        <path class="ear right" d="M82 27l25-10-10 22Z"></path>
+        <circle class="eye" cx="57" cy="70" r="4"></circle>
+        <circle class="eye" cx="82" cy="70" r="4"></circle>
+        <path class="smile" d="M64 82c5 5 14 5 19 0"></path>
+        <path class="mark" d="M69 60 74 49l5 11Z"></path>
+      </svg>
+    `;
+  }
+
+  if (kind === "deer") {
+    return `
+      <svg class="mascot mascot-deer" viewBox="0 0 120 120" role="img" aria-label="Q版鹿蜀">
+        <path class="antler" d="M42 36c-13-14-9-27 1-27m0 18-15-5m15 5 7-14"></path>
+        <path class="antler" d="M78 36c13-14 9-27-1-27m0 18 15-5m-15 5-7-14"></path>
+        <path class="body" d="M24 72c0-24 18-42 36-42s36 18 36 42c0 23-16 37-36 37S24 95 24 72Z"></path>
+        <path class="ear left" d="M38 42 20 29l5 25Z"></path>
+        <path class="ear right" d="M82 42l18-13-5 25Z"></path>
+        <circle class="eye" cx="49" cy="70" r="4"></circle>
+        <circle class="eye" cx="73" cy="70" r="4"></circle>
+        <path class="nose" d="M59 80c3-2 6-2 9 0-1 5-7 5-9 0Z"></path>
+        <circle class="spot" cx="38" cy="58" r="4"></circle>
+        <circle class="spot" cx="86" cy="58" r="4"></circle>
+      </svg>
+    `;
+  }
+
+  return `
+    <svg class="mascot mascot-bird" viewBox="0 0 120 120" role="img" aria-label="Q版精卫鸟">
+      <path class="wing left" d="M48 70C28 70 16 55 19 38c17 2 29 12 35 29Z"></path>
+      <path class="wing right" d="M72 70c20 0 32-15 29-32-17 2-29 12-35 29Z"></path>
+      <path class="body" d="M34 67c0-21 15-38 26-38s26 17 26 38c0 24-14 40-26 40S34 91 34 67Z"></path>
+      <path class="crest" d="M51 34 60 14l9 20Z"></path>
+      <circle class="eye" cx="52" cy="64" r="4"></circle>
+      <circle class="eye" cx="72" cy="64" r="4"></circle>
+      <path class="beak" d="M60 73 72 78 60 83Z"></path>
+      <path class="tail" d="M51 101 38 116l20-5 9 16 5-18 19 5-13-15Z"></path>
+    </svg>
+  `;
 }
 
 function syncViewportSize(): void {
